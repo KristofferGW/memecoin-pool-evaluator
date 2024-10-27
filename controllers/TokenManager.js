@@ -13,7 +13,7 @@ class TokenManager {
     }
 
     removeToken(tokenId) {
-        const index = this.tokens.findIndex(token => token.id === tokenId);
+        const index = this.getIndex(tokenId);
         if (index === -1) {
             throw new Error(`Token with id ${tokenId} not found`);
         }
@@ -36,6 +36,15 @@ class TokenManager {
             this.tokens[i].marketCap = newTokenData.market_cap;
         }
         
+    }
+
+    updateTargetMarketCap(tokenId, newTargetMarketCap) {
+        const tokenIndex = this.getIndex(tokenId);
+        this.tokens[tokenIndex].targetMarketCap = newTargetMarketCap;
+    }
+
+    getIndex(tokenId) {
+        return this.tokens.findIndex(token => token.id === tokenId);
     }
 }
 
