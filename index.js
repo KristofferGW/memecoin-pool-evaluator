@@ -1,43 +1,40 @@
 const express = require('express');
-const { getTokensToProvideMetrics } = require('./controllers/metricsController');
-const tokensToProvide = require('./config/tokens');
+const TokenManager = require('./controllers/TokenManager');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-app.get('/metrics', async (req, res) => {
-    console.log("Fetching token metrics...");
+app.get('/tokens', async (req, res) => {
+    const allTokens = TokenManager.getAllTokens();
+    res.status(200).json(allTokens.sort((a, b) => b.xToTarget - a.xToTarget));
+});
+
+app.get('/update-market-cap', async (req, res) => {
     try {
-        await getTokensToProvideMetrics();
-        res.status(200).json(tokensToProvide);
+        await TokenManager.updateMarketCaps();
+        res.status(200).json({ message: "All token metrics refreshed successfully", tokens: TokenManager.getAllTokens() });
     } catch (error) {
-        console.error("Error fetching token metrics:", error);
-        res.status(500).json({ error: "Failed to fetch token metrics" });
+        console.error("Error refreshing token metrics:", error.message);
+        res.status(500).json({ error: "Failed to refresh token metrics" });
     }
 });
 
 app.post('/add-token', async (req, res) => {
     const { tokenId, targetMarketCap } = req.body;
+    console.log("tokenId + targetMarketCap", tokenId + targetMarketCap);
 
     if (!tokenId || !targetMarketCap) {
         return res.status(400).json({ error: "Please provide tokenId and targetMarketCap"});
     }
 
-    const newToken = {
-        id: tokenId,
-        targetMarketCap: targetMarketCap
-    };
-    tokensToProvide.push(newToken);
-
     try {
-        await getTokensToProvideMetrics();
-        console.log(`Added new token: ${tokenId} with target market cap of ${targetMarketCap}`);
-        res.status(201).json({ message: `Token ${tokenId} added successfully`, token: newToken });
+        const newToken = await TokenManager.addToken(tokenId, targetMarketCap);
+        res.status(201).json({ message: `Token ${tokenId} added successfully`, token: newToken});
     } catch (error) {
-        console.error("Error fetching metrics after adding token", error);
-        res.status(500).json({ error: "Failed to fetch metrics for the new token"});
+        console.error("Error adding token:", error.message);
+        res.status(500).json({ error: "Failed to add token"});
     }
 });
 
@@ -48,15 +45,13 @@ app.delete('/remove-token', (req, res) => {
         return res.status(400).json({ error: "Please provide tokenId" });
     }
 
-    const tokenIndex = tokensToProvide.findIndex(token => token.id === tokenId);
-
-    if (tokenIndex === -1) {
-        return res.status(404).json({ error: `Token with id ${tokenId} not found` });
-    };
-
-    const removedToken = tokensToProvide.splice(tokenIndex, 1);
-    console.log(`Removed token ${tokenId}`);
-    res.status(200).json({ message: `Token ${tokenId} removed successfully`, token: removedToken[0] });
+    try {
+        const removedToken = TokenManager.removeToken(tokenId);
+        res.status(200).json({ message: `Token ${tokenId} removed successfully`, token: removedToken });
+    } catch (error) {
+        console.error("Error removing token:", error.message);
+        res.status(404).json({ error: error.message });
+    }
 })
 
 app.listen(PORT, () => {
