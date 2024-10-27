@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const fetchMarketData = async (tokenIds) => {
+const fetchMarketDataFromApi = async (tokenIds) => {
     try {
         const response = await axios.get(`https://api.coingecko.com/api/v3/coins/markets`, {
             params: {
@@ -15,4 +15,4 @@ const fetchMarketData = async (tokenIds) => {
     }
 }
 
-module.exports = { fetchMarketData };
+module.exports = { fetchMarketDataFromApi };
