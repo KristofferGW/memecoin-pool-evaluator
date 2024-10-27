@@ -3,7 +3,9 @@ const { fetchMarketData } = require('../services/apiService');
 
 const getTokensToProvideMetrics = async () => {
     const tokenIds = tokensToProvide.map(token => token.id);
+    console.log("Token ids in getTokensToProvideMetrics", tokenIds);
     const marketData = await fetchMarketData(tokenIds);
+    console.log("marketData", marketData);
 
     if (marketData && marketData.length > 0) {
         tokensToProvide.forEach(token => {

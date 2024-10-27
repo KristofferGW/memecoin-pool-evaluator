@@ -18,7 +18,7 @@ app.get('/metrics', async (req, res) => {
     }
 });
 
-app.post('/add-token', (req, res) => {
+app.post('/add-token', async (req, res) => {
     const { tokenId, targetMarketCap } = req.body;
 
     if (!tokenId || !targetMarketCap) {
@@ -31,8 +31,14 @@ app.post('/add-token', (req, res) => {
     };
     tokensToProvide.push(newToken);
 
-    console.log(`Added new token: ${tokenId} with target market cap of ${targetMarketCap}`);
-    res.status(201).json({ message: `Token ${tokenId} added successfully`, token: newToken });
+    try {
+        await getTokensToProvideMetrics();
+        console.log(`Added new token: ${tokenId} with target market cap of ${targetMarketCap}`);
+        res.status(201).json({ message: `Token ${tokenId} added successfully`, token: newToken });
+    } catch (error) {
+        console.error("Error fetching metrics after adding token", error);
+        res.status(500).json({ error: "Failed to fetch metrics for the new token"});
+    }
 });
 
 app.delete('/remove-token', (req, res) => {
