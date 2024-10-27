@@ -25,9 +25,6 @@ class TokenManager {
     }
 
     async updateMarketCaps() {
-        // for (const token of this.tokens) {
-        //     await token.fetchMetrics();
-        // }
         const tokenIds = [];
         this.tokens.forEach((token) => {
             tokenIds.push(token.id);
@@ -35,7 +32,8 @@ class TokenManager {
 
         const currentMarketData = await fetchMarketDataFromApi(tokenIds);
         for (let i = 0; i < this.tokens.length; i++) {
-            this.tokens[i].marketCap = currentMarketData[i].market_cap;
+            const newTokenData = currentMarketData.find((token) => token.id === this.tokens[i].id)
+            this.tokens[i].marketCap = newTokenData.market_cap;
         }
         
     }
